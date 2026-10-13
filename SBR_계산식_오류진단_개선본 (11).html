@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SBR 공정 설계 계산서 (보고서 인쇄용)</title>
+<style>
+:root {
+    box-sizing: border-box;
+    --bg: #f8fafc;        
+    --fg: #1e293b;        
+    --mut: #64748b;       
+    --card: #ffffff;      
+    --bd: #e2e8f0;        
+    --ac: #0284c7;        
+    --ac-light: #e0f2fe;  
+    --ok: #059669;
+    --bad: #e11d48;
+    --pre: #f1f5f9;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg: #0f172a; --fg: #e2e8f0; --mut: #94a3b8; 
+        --card: #1e293b; --bd: #334155; --ac: #38bdf8; 
+        --ac-light: #0c4a6e; --ok: #34d399; --bad: #fb7185; --pre: #0f172a;
+    }
+}
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+* { box-sizing: border-box; }
+body { 
+    margin: 0; background: var(--bg); color: var(--fg); 
+    font: 14.5px/1.6 "Pretendard", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; 
+}
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+/* 헤더 및 타이포그래피 */
+.header-area { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 2px solid var(--fg); padding-bottom: 12px; }
+.header-title h1 { font-size: 26px; margin: 0 0 6px; color: var(--fg); letter-spacing: -0.5px; }
+.header-title p { color: var(--mut); font-size: 13.5px; margin: 0; }
+h2 { font-size: 16px; margin: 0 0 12px; color: var(--fg); border-bottom: 1px solid var(--bd); padding-bottom: 6px; }
+h3 { font-size: 15px; margin: 0 0 8px; color: var(--ac); font-weight: 600; }
+.section-title { font-size: 18px; margin: 30px 0 16px; color: var(--fg); font-weight: 700; background: var(--bd); padding: 8px 12px; border-radius: 6px; }
+
+/* 인쇄 버튼 (상단 플로팅 고정) */
+.btn-print {
+    background: var(--ac); color: #fff; border: none; padding: 12px 24px; 
+    border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; 
+    box-shadow: 0 4px 6px rgba(2, 132, 199, 0.3); transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-print:hover { background: #0369a1; transform: translateY(-1px); }
+.btn-print svg { width: 18px; height: 18px; }
+
+/* 폼 레이아웃 */
+.input-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--bd); border-radius: 12px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.row:last-child { margin-bottom: 0; }
+.row label { flex: 1; font-size: 13.5px; font-weight: 500; color: var(--fg); }
+.input-wrap { display: flex; align-items: center; gap: 6px; justify-content: flex-end; width: 150px; }
+.row input { 
+    width: 80px; padding: 6px 8px; border: 1px solid var(--bd); 
+    border-radius: 6px; background: var(--bg); color: var(--fg); 
+    text-align: right; font-size: 14px; font-family: inherit; transition: border 0.2s;
+}
+.row input:focus { outline: none; border-color: var(--ac); box-shadow: 0 0 0 3px var(--ac-light); }
+.row span { width: 56px; font-size: 12px; color: var(--mut); text-align: left; }
+
+details { margin-top: 16px; }
+summary { cursor: pointer; font-weight: 600; font-size: 14px; padding: 12px; background: var(--card); border: 1px solid var(--bd); border-radius: 8px; user-select: none; }
+summary:hover { background: var(--bg); }
+
+/* 리포트 출력부 */
+.step { margin-top: 16px; background: var(--card); border: 1px solid var(--bd); border-left: 4px solid var(--ac); border-radius: 8px; padding: 16px 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+.step-final { border-left-color: var(--ok); margin-top: 24px; }
+pre { margin: 0; padding: 12px; background: var(--pre); border-radius: 6px; overflow-x: auto; font: 13.5px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, "D2Coding", monospace; white-space: pre-wrap; word-break: break-all; color: var(--fg); }
+.v { padding: 10px 14px; border-radius: 6px; margin-top: 12px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.ok { background: color-mix(in srgb, var(--ok) 12%, transparent); color: var(--ok); border: 1px solid color-mix(in srgb, var(--ok) 30%, transparent); }
+.bad { background: color-mix(in srgb, var(--bad) 12%, transparent); color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 30%, transparent); }
+
+/* 표 스타일 */
+.tw { overflow-x: auto; border-radius: 6px; border: 1px solid var(--bd); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; background: var(--card); }
+th { background: var(--pre); color: var(--fg); font-weight: 600; border-bottom: 2px solid var(--bd); text-align: left; padding: 10px 12px; }
+td { border-bottom: 1px solid var(--bd); padding: 9px 12px; color: var(--fg); }
+tr:nth-child(even) td { background: var(--bg); }
+tr:last-child td { border-bottom: none; }
+td:nth-child(3), th:nth-child(3) { text-align: right; font-weight: 600; color: var(--ac); }
+
+
+/* 계산식 오류 자동 진단 */
+.diagnostic-panel{margin:16px 0;border:1px solid var(--bd);border-radius:10px;overflow:hidden;background:var(--card)}
+.diag-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 15px;background:var(--pre);font-weight:800;border-bottom:1px solid var(--bd)}
+.diag-count{font-size:12px;padding:3px 9px;border-radius:99px;background:var(--bad);color:white;white-space:nowrap}
+.diag-count.good{background:var(--ok)}
+.diag-body{padding:10px 14px}
+.diag-item{margin:7px 0;padding:10px 12px;border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);border-left:4px solid var(--bad);border-radius:6px;background:color-mix(in srgb,var(--bad) 6%,transparent)}
+.diag-item.warn{border-color:color-mix(in srgb,#d97706 40%,transparent);border-left-color:#d97706;background:color-mix(in srgb,#d97706 7%,transparent)}
+.diag-item strong{display:block;margin-bottom:4px}.diag-item p{margin:3px 0;font-size:13px}
+.diag-ok{padding:11px 12px;border:1px solid color-mix(in srgb,var(--ok) 35%,transparent);background:color-mix(in srgb,var(--ok) 7%,transparent);border-radius:6px;color:var(--ok)}
+input.input-error{border-color:var(--bad)!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--bad) 16%,transparent)!important}
+.step .formula-note{font-size:12px;color:var(--mut);margin-top:8px}
+@media print{.diagnostic-panel{break-inside:avoid;page-break-inside:avoid}.diag-head{background:#eee!important;color:#000}.diag-count{background:#555!important}.diag-item,.diag-ok{background:#fff!important;color:#000;border-color:#777!important}}
+/* =========== 인쇄용(PDF) 전용 스타일 =========== */
+@media print {
+    @page { margin: 15mm; size: A4 portrait; }
+    body { background: #fff !important; color: #000 !important; font-size: 11pt; }
+    main { max-width: 100%; margin: 0; padding: 0; }
+    
+    /* 화면용 요소 숨기기 */
+    .no-print { display: none !important; }
+    
+    .header-area { border-bottom: 2px solid #000; margin-bottom: 15px; }
+    .header-title h1 { font-size: 20pt; color: #000; }
+    .header-title p { color: #333; }
+    .section-title { font-size: 14pt; background: #eee; border: 1px solid #ccc; break-after: avoid; page-break-after: avoid; border-radius: 0; }
+
+    /* 입력 폼 인쇄용 스타일 (텍스트 형태로 깔끔하게) */
+    .input-section { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .card { border: none; box-shadow: none; padding: 0; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
+    .card h2 { font-size: 12pt; border-bottom: 2px solid #333; margin-bottom: 6px; }
+    .row { border-bottom: 1px dashed #ccc; padding: 4px 0; }
+    .row input { border: none !important; background: transparent !important; color: #000 !important; font-weight: bold; text-align: right; padding: 0; width: auto; font-size: 11pt; }
+    .row span { color: #000; }
+    
+    details { display: block; }
+    summary { display: none; } /* 인쇄 시 동역학 계수 요약버튼 숨기고 내용은 바로 표출 */
+
+    /* 풀이과정 및 결과표 인쇄 스타일 */
+    .step { 
+        border: 1px solid #999; border-left: 4px solid #333; 
+        border-radius: 0; box-shadow: none; padding: 12px 16px; 
+        margin-top: 12px; background: #fff !important; 
+        break-inside: avoid; page-break-inside: avoid; /* 요소가 페이지 중간에 잘리지 않도록 보호 */
+    }
+    .step h3 { color: #000; font-size: 12pt; margin-bottom: 4px; }
+    pre { background: #fff !important; border: none; color: #000 !important; font-size: 9.5pt; padding: 0; white-space: pre-wrap; }
+    
+    /* 최종 요약표 강제 페이지 넘김 또는 보호 */
+    .step-final { break-before: auto; page-break-before: auto; border: 2px solid #000; border-left: 6px solid #000; }
+    .tw { border: none; }
+    table { font-size: 10pt; border: 1px solid #000; }
+    th { background: #e5e5e5 !important; color: #000; border-bottom: 2px solid #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    td { border-bottom: 1px solid #999; color: #000; }
+    tr:nth-child(even) td { background: #f9f9f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    td:nth-child(3), th:nth-child(3) { color: #000; font-weight: bold; }
+}
+
+/* 엑셀형 시트 탭 및 송풍/배관 계산 시트 */
+.sheet-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 18px;border-bottom:1px solid var(--bd);padding-bottom:8px}
+.sheet-tab{appearance:none;border:1px solid var(--bd);background:var(--card);color:var(--fg);padding:10px 16px;border-radius:8px 8px 0 0;font:inherit;font-weight:700;cursor:pointer}
+.sheet-tab.active{background:var(--ac);border-color:var(--ac);color:#fff}
+.sheet-panel[hidden]{display:none!important}
+.sheet-note{padding:12px 14px;background:var(--pre);border:1px solid var(--bd);border-radius:8px;margin:12px 0;font-size:13px;color:var(--mut)}
+.air-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:14px}
+.air-card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:15px}
+.air-card h2{font-size:16px;margin-bottom:12px}
+.air-field{display:grid;grid-template-columns:minmax(0,1fr) 115px 65px;gap:8px;align-items:center;margin:9px 0}
+.air-field label{font-size:13px}.air-field input{width:100%;min-width:0;padding:7px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);text-align:right;font:inherit}.air-field span{font-size:12px;color:var(--mut)}
+.air-result{font-size:22px;font-weight:800;color:var(--ac);margin:5px 0}.air-result small{font-size:13px;font-weight:500;color:var(--mut)}
+.air-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.air-actions button{border:1px solid var(--bd);border-radius:7px;padding:8px 12px;background:var(--card);color:var(--fg);font:inherit;cursor:pointer}
+@media print{.sheet-tabs{display:none!important}.sheet-panel[hidden]{display:block!important}.sheet-panel{break-before:page}.air-card{break-inside:avoid}.air-field input{border:none;background:transparent;color:#000}}
+</style>
+</head>
+<body>
+<main>
+    <div class="header-area">
+        <div class="header-title">
+            <h1>SBR 공정 구조 및 용량 설계 계산서</h1>
+            <p>프로젝트명: ______________ &nbsp;|&nbsp; 작성일: 2026. __. __. &nbsp;|&nbsp; 작성자: ______________</p>
+        </div>
+        <button class="btn-print no-print" onclick="window.print()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            보고서 PDF 인쇄
+        </button>
+    </div>
+    
+    <div class="sheet-tabs no-print" role="tablist" aria-label="설계 계산 시트">
+        <button class="sheet-tab active" type="button" role="tab" aria-selected="true" data-sheet="sheet-sbr">시트 1 · SBR 공정 설계</button>
+        <button class="sheet-tab" type="button" role="tab" aria-selected="false" data-sheet="sheet-air">시트 2 · 송풍량 및 배관 계산</button>
+    </div>
+    <div id="sheet-sbr" class="sheet-panel">
+    <div class="section-title">1. 설계 입력 인자</div>
+    <div class="input-section" id="form-main"></div>
+    <details id="kin-details" class="no-print">
+        <summary>동역학 계수 및 매개변수 (표 8-14 기준, 확인 시 클릭)</summary>
+        <div class="input-section" id="kin" style="margin-top:12px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));"></div>
+    </details>
+    <!-- 인쇄용으로만 노출되는 동역학계수 컨테이너 -->
+    <div id="kin-print" class="input-section" style="display: none;"></div>
+    <div id="diagnostics" class="diagnostic-panel" aria-live="polite"></div>
+    
+    <div class="section-title">2. 상세 구조계산 풀이과정</div>
+    <div id="out"></div>
+    </div><!-- /sheet-sbr -->
+
+    <div id="sheet-air" class="sheet-panel" hidden>
+      <div class="section-title">시트 2. 송풍량 및 배관 계산</div>
+      <div class="sheet-note"><b>계산 범위:</b> 산소요구량을 기준으로 한 예비 송풍량, 배관 내경, 송풍기 토출압력 산정용입니다. 산소전달효율은 수심·디퓨저·수온·오염도·고도에 따라 달라집니다. 실제 발주/시공 전에는 디퓨저 성능곡선, 제조사 압력손실, 배관 등가길이 및 부속 손실, 현장 조건으로 재검토해야 합니다.</div>
+      <div class="air-grid">
+        <section class="air-card">
+          <h2>① 송풍량 산정 입력</h2>
+          <div class="air-field"><label for="airAor">산소전달 요구량 AOR</label><input id="airAor" type="number" min="0" step="any" value="0"><span>kg O₂/h</span></div>
+          <div class="air-field"><label for="airActiveReactors">동시 포기 반응조 수</label><input id="airActiveReactors" type="number" min="1" step="1" value="1"><span>개</span></div>
+          <div class="air-field"><label for="airSF">설계 여유율</label><input id="airSF" type="number" min="1" step="any" value="1.3"><span>배</span></div>
+          <div class="air-field"><label for="airOTE">현장 산소전달효율 OTE</label><input id="airOTE" type="number" min="1" max="100" step="any" value="15"><span>%</span></div>
+          <div class="air-field"><label for="airO2">공기 1 Nm³의 산소 질량</label><input id="airO2" type="number" min="0.01" step="any" value="0.299"><span>kg O₂/Nm³</span></div>
+          <div class="air-actions"><button type="button" id="airLink">SBR 산소요구량 가져오기 (조당값)</button><button type="button" id="airCalcBtn">다시 계산</button></div>
+          <div class="sheet-note">기본식: 송풍량 = AOR × 여유율 ÷ (0.299 × OTE). OTE는 %가 아닌 소수로 환산하여 계산합니다. 여기서는 현장 조건에서의 종합 전달효율을 직접 입력하는 단순 예비식입니다.</div>
+        </section>
+        <section class="air-card">
+          <h2>② 배관 및 압력 입력</h2>
+          <div class="air-field"><label for="airMainV">주배관 설계 유속</label><input id="airMainV" type="number" min="0.1" step="any" value="10"><span>m/s</span></div>
+          <div class="air-field"><label for="airBranchV">분기관 설계 유속</label><input id="airBranchV" type="number" min="0.1" step="any" value="6"><span>m/s</span></div>
+          <div class="air-field"><label for="airBranches">동시 운전 분기관 수</label><input id="airBranches" type="number" min="1" step="1" value="4"><span>개</span></div>
+          <div class="air-field"><label for="airDepth">디퓨저 설치 수심</label><input id="airDepth" type="number" min="0" step="any" value="5"><span>m</span></div>
+          <div class="air-field"><label for="airDiffLoss">디퓨저 압력손실</label><input id="airDiffLoss" type="number" min="0" step="any" value="5"><span>kPa</span></div>
+          <div class="air-field"><label for="airPipeLoss">배관·밸브 손실 추정치</label><input id="airPipeLoss" type="number" min="0" step="any" value="5"><span>kPa</span></div>
+          <div class="air-field"><label for="airPressMargin">압력 여유</label><input id="airPressMargin" type="number" min="0" step="any" value="10"><span>kPa</span></div>
+          <div class="sheet-note">배관 내경은 선택한 유속으로 계산한 이론 내경입니다. 실제 선정은 표준관경의 실제 내경과 압력손실 계산으로 확정하세요.</div>
+        </section>
+      </div>
+      <div class="section-title">계산 결과</div>
+      <div class="air-grid" id="airResults"></div>
+      <div class="step"><h3>계산식 및 적용 주의사항</h3><pre id="airFormula">입력값을 확인하면 계산식이 표시됩니다.</pre></div>
+    </div>
+</main>
+
+<script>
+// 인쇄 전 이벤트: details 태그 자동 열기 및 인쇄 전용 영역 세팅
+window.addEventListener('beforeprint', () => {
+    document.getElementById('kin-details').setAttribute('open', '');
+    document.getElementById('kin-print').style.display = 'grid'; // 인쇄 시 동역학 변수 활성화
+});
+window.addEventListener('afterprint', () => {
+    document.getElementById('kin-print').style.display = 'none'; // 인쇄 후 원복
+});
+
+// 변수 그룹화: w(폐수특성), d(운전/제원 조건), k(동역학)
+const G = { w: '폐수 특성 (Wastewater Characteristics)', d: '운전 주기 및 반응조 제원 (Design Conditions)' };
+const IN = [
+    // 폐수 특성
+    ['Q', '설계 유량 (Q)', 1000, 'm³/d', 'w'], 
+    ['BOD', '유입 BOD', 250, 'g/m³', 'w'], 
+    ['sBOD', '유입 sBOD', 100, 'g/m³', 'w'],
+    ['COD', '유입 COD', 500, 'g/m³', 'w'], 
+    ['sCOD', '유입 sCOD', 200, 'g/m³', 'w'], 
+    ['rbCOD', '유입 rbCOD', 100, 'g/m³', 'w'],
+    ['TSS', '유입 TSS', 240, 'g/m³', 'w'], 
+    ['VSS', '유입 VSS', 200, 'g/m³', 'w'], 
+    ['TKN', '유입 TKN', 40, 'g/m³', 'w'], 
+    ['TP', '유입 TP', 8, 'g/m³', 'w'], 
+    ['Alk', '알칼리도 (CaCO₃)', 200, 'g/m³', 'w'], 
+    ['r', 'bCOD / BOD 비', 1.6, '', 'w'],
+    
+    // 운전 주기 및 반응조 조건
+    ['N', '반응조 개수 (N)', 1, '개', 'd'], 
+    ['tF', '유입시간 (tF) *공란=자동', 3, 'h', 'd'], 
+    ['tA', '포기시간 (tA)', 2, 'h', 'd'],
+    ['tS', '침전시간 (tS)', 0.5, 'h', 'd'], 
+    ['tD', '배출시간 (tD)', 0.5, 'h', 'd'], 
+    ['tI', '휴지시간 (tI)', 0, 'h', 'd'],
+    ['MLSS', '설계 MLSS', 3000, 'g/m³', 'd'], 
+    ['ratio', '유입부피비 (V_F/V_T)', 0.2, '', 'd'],
+    ['H', '만수위 수심 (H)', 6, 'm', 'd'], 
+    ['T', '설계 수온', 12, '°C', 'd'], 
+    ['Ne', '목표 유출 NH₄-N', 1, 'g/m³', 'd'],
+    ['Se', '목표 유출 bCOD (S)', 0, 'g/m³', 'd'], 
+    ['DO', '운전 용존산소 (DO)', 2, 'g/m³', 'd'], 
+    ['SVI', '설계 SVI', 150, 'mL/g', 'd'],
+    ['fr', 'NOx/TKN 전화율', 0.8, '', 'd'], 
+
+    // 동역학 계수
+    ['Y','Y (수율)',0.45,'','k'],['bH20','b_H (20°C)',0.12,'','k'],['thH','θ (b_H)',1.04,'','k'],['fd','f_d',0.15,'','k'],
+    ['Yn','Y_n (질산화)',0.15,'','k'],['bna','b_n 호기 (20°C)',0.17,'','k'],['bnx','b_n 무산소 (20°C)',0.07,'','k'],['thn','θ (b_n)',1.029,'','k'],
+    ['mu20','μ_max,AOB (20°C)',0.9,'','k'],['thm','θ (μ)',1.072,'','k'],['KN','K_NH₄',0.5,'g/m³','k'],['Ko','K_o',0.5,'g/m³','k'],['vf','VSS/TSS 비',0.85,'','k']
+];
+
+function buildInputs(groupKeys, hostId) {
+    const host = document.getElementById(hostId);
+    groupKeys.forEach(gKey => {
+        const c = document.createElement('div');
+        c.className = 'card';
+        if(G[gKey]) c.innerHTML = `<h2>${G[gKey]}</h2>`;
+        IN.filter(i => i[4] === gKey).forEach(i => {
+            const r = document.createElement('div');
+            r.className = 'row';
+            r.innerHTML = `<label for="${hostId}_${i[0]}">${i[1]}</label><div class="input-wrap"><input id="${i[0]}" type="${i[0]==='tF'?'text':'number'}" step="any" value="${i[2]}"><span>${i[3]}</span></div>`;
+            c.appendChild(r);
+        });
+        host.appendChild(c);
+    });
+}
+buildInputs(['w', 'd'], 'form-main');
+buildInputs(['k'], 'kin');
+// 인쇄용 동역학 렌더링 (구조 분리)
+buildInputs(['k'], 'kin-print'); 
+// ID 중복 방지를 위한 처리 (기능상 이벤트는 기존 ID로 감지)
+
+document.querySelectorAll('input').forEach(e => {
+    e.addEventListener('input', function() {
+        // kin 과 kin-print 동기화
+        const val = this.value;
+        document.querySelectorAll(`input[id="${this.id}"]`).forEach(el => el.value = val);
+        calc();
+    });
+});
+
+const f = (x, d=1) => {
+    const t = Number(x).toLocaleString('en-US', {minimumFractionDigits: d, maximumFractionDigits: d});
+    return d === 1 && t.endsWith('.0') ? t.slice(0, -2) : t;
+};
+
+function calc() {
+    const v = {}; 
+    for(const i of IN) { 
+        let val = document.getElementById(i[0]).value;
+        v[i[0]] = val === '' ? NaN : parseFloat(val);
+    }
+    const out = document.getElementById('out');
+    const autoF = isNaN(v.tF); 
+    if(autoF) v.tF = v.tA + v.tS + v.tD;
+    
+    const diag = document.getElementById('diagnostics');
+    const issues = [];
+    document.querySelectorAll('#form-main input, #kin input').forEach(el => el.classList.remove('input-error'));
+    const issue = (step,title,reason,fix,kind='error',keys=[]) => {
+        issues.push({step,title,reason,fix,kind});
+        keys.forEach(k => { const el=document.getElementById(k); if(el) el.classList.add('input-error'); });
+    };
+    IN.forEach(i => {
+        if(!Number.isFinite(v[i[0]]) && !(i[0]==='tF' && autoF))
+            issue('입력값', `${i[1]} 값이 비어 있거나 숫자가 아닙니다.`, `입력값: ${document.getElementById(i[0]).value || '공란'}`, '숫자를 입력하세요. tF는 공란으로 두면 자동 계산됩니다.', 'error',[i[0]]);
+    });
+    [['Q','설계 유량'],['N','반응조 개수'],['tA','포기시간'],['tD','배출시간'],['MLSS','설계 MLSS'],['VSS','유입 VSS'],['H','만수위 수심'],['Y','수율 Y'],['Yn','질산화 수율'],['vf','VSS/TSS 비'],['mu20','최대 비성장속도'],['KN','K_NH4'],['Ko','K_O'],['thH','온도계수 θH'],['thn','온도계수 θn'],['thm','온도계수 θμ']].forEach(([k,label])=>{
+        if(Number.isFinite(v[k]) && v[k] <= 0) issue('입력값',`${label} 값은 0보다 커야 합니다.`,`${k} = ${v[k]}`,'입력값과 단위를 확인하세요.','error',[k]);
+    });
+    ['BOD','sBOD','COD','sCOD','TSS','VSS','TKN','TP','Alk','Ne','Se','DO','SVI','rbCOD','tS','tI','fd','bH20','bna','bnx'].forEach(k=>{
+        if(Number.isFinite(v[k]) && v[k] < 0) issue('입력값',`${k}에 음수가 입력되었습니다.`,`${k} = ${v[k]}`,'분석값 또는 설계 조건을 확인하세요.','error',[k]);
+    });
+    if(Number.isFinite(v.N) && (v.N<1 || !Number.isInteger(v.N))) issue('입력값','반응조 개수 N은 1 이상의 정수여야 합니다.',`N = ${v.N}`,'반응조 개수를 정수로 입력하세요.','error',['N']);
+    if(Number.isFinite(v.ratio) && !(v.ratio>0 && v.ratio<1)) issue('반응조 용량','유입부피비 VF/VT는 0과 1 사이여야 합니다.',`VF/VT = ${v.ratio}`,'유입부피비를 확인하세요.','error',['ratio']);
+    if(Number.isFinite(v.fr) && !(v.fr>=0 && v.fr<=1)) issue('질소 산화 산식','NOx/TKN 전화율 fr은 0~1 범위를 벗어났습니다.',`fr = ${v.fr}`,'비율 입력값을 확인하세요.','error',['fr']);
+    if(Number.isFinite(v.T) && (v.T<0 || v.T>40)) issue('동역학 계수','설계 수온이 일반적인 생물학적 처리 검토 범위를 벗어났습니다.',`T = ${v.T} °C`,'현장 최저 설계수온과 온도계수 적용 범위를 확인하세요.','warn',['T']);
+    if(Number.isFinite(v.TSS)&&Number.isFinite(v.VSS)&&v.TSS<v.VSS) issue('폐수 특성','TSS가 VSS보다 작아 iTSS가 음수가 됩니다.',`iTSS = TSS − VSS = ${v.TSS-v.VSS} g/m³`,'TSS와 VSS 분석값 및 단위를 확인하세요.','error',['TSS','VSS']);
+    if(Number.isFinite(v.r)&&Number.isFinite(v.BOD)&&Number.isFinite(v.COD)&&v.r*v.BOD>v.COD) issue('폐수 특성','계산된 bCOD가 총 COD보다 큽니다.',`bCOD = r×BOD = ${v.r*v.BOD} g/m³, COD = ${v.COD} g/m³`,'r, BOD, COD의 분석값과 단위를 확인하세요.','error',['r','BOD','COD']);
+    if(Number.isFinite(v.r)&&Number.isFinite(v.sBOD)&&Number.isFinite(v.sCOD)&&v.r*v.sBOD>v.sCOD) issue('폐수 특성','계산된 bsCOD가 sCOD보다 큽니다.',`bsCOD = r×sBOD = ${v.r*v.sBOD} g/m³, sCOD = ${v.sCOD} g/m³`,'r, sBOD, sCOD의 정의와 입력값을 확인하세요.','error',['r','sBOD','sCOD']);
+    const tcCheck = v.tF+v.tA+v.tS+v.tD+v.tI;
+    if(Number.isFinite(tcCheck)&&tcCheck<=0) issue('운전주기','총 주기시간이 0 이하입니다.',`Tc = ${tcCheck} h`,'운전 단계별 시간을 확인하세요.','error',['tF','tA','tS','tD','tI']);
+    if(Number.isFinite(tcCheck)&&tcCheck>24) issue('운전주기','총 주기시간이 24시간을 초과합니다.',`Tc = ${tcCheck} h`,'하루 운전 계획과 단계별 시간을 확인하세요.','warn',['tF','tA','tS','tD','tI']);
+    if(issues.some(x=>x.kind==='error')) {
+        diag.innerHTML = `<div class="diag-head"><span>계산식 오류 진단</span><span class="diag-count">${issues.filter(x=>x.kind==='error').length}건 확인</span></div><div class="diag-body">${issues.map(x=>`<div class="diag-item ${x.kind==='warn'?'warn':''}"><strong>[${x.step}] ${x.title}</strong><p>${x.reason}</p><p><b>조치:</b> ${x.fix}</p></div>`).join('')}</div>`;
+        out.innerHTML = '<section class="step"><h3>계산을 중단했습니다</h3><pre>위 오류를 수정하면 자동으로 다시 계산됩니다. 오류가 발생한 단계와 원인 및 조치 방법을 입력값과 계산식 기준으로 표시했습니다.</pre></section>'; return;
+    }
+    
+    const {rbCOD,TP,Alk,Q,BOD,sBOD,COD,sCOD,TSS,VSS,TKN,r,MLSS,T,Ne,N,tF,tA,tS,tD,tI,Se,ratio,H,SVI,fr,DO,Y,bH20,thH,fd,Yn,bna,bnx,thn,mu20,thm,KN,Ko,vf} = v;
+    
+    // Step 1
+    const Sb = r * BOD, bs = r * sBOD, nbs = sCOD - bs, nbp = COD - Sb - nbs, vc = (COD - sCOD) / VSS, nbV = nbp / vc, iT = TSS - VSS;
+    if(!Number.isFinite(vc)||vc<=0) issue('폐수 특성 산식','COD/VSS 비가 0 이하이거나 계산 불가능합니다.',`vc = (COD − sCOD)/VSS = (${COD} − ${sCOD})/${VSS} = ${vc}`,'COD가 sCOD보다 큰지, VSS가 0보다 큰지 확인하세요.','error',['COD','sCOD','VSS']);
+    if(nbs<0) issue('폐수 특성 산식','nbsCOD가 음수입니다.',`nbsCOD = sCOD − bsCOD = ${sCOD} − ${bs} = ${nbs} g/m³`,'sCOD 또는 r×sBOD의 입력값을 확인하세요.','error',['sCOD','r','sBOD']);
+    if(nbp<0) issue('폐수 특성 산식','nbpCOD가 음수입니다.',`nbpCOD = COD − bCOD − nbsCOD = ${COD} − ${Sb} − ${nbs} = ${nbp} g/m³`,'COD, sCOD, BOD 및 r를 확인하세요.','error',['COD','sCOD','BOD','r']);
+    if(Sb-Se<0) issue('유기물 제거량 산식','제거 대상 bCOD(S₀)가 음수입니다.',`S₀ = bCOD − 유출 bCOD = ${Sb} − ${Se} = ${Sb-Se} g/m³`,'목표 유출 bCOD Se가 유입 bCOD보다 큰지 확인하세요.','error',['Se','BOD','r']);
+    if(issues.some(x=>x.kind==='error')) {
+        diag.innerHTML = `<div class="diag-head"><span>계산식 오류 진단</span><span class="diag-count">${issues.filter(x=>x.kind==='error').length}건 확인</span></div><div class="diag-body">${issues.map(x=>`<div class="diag-item"><strong>[${x.step}] ${x.title}</strong><p>${x.reason}</p><p><b>조치:</b> ${x.fix}</p></div>`).join('')}</div>`;
+        out.innerHTML = '<section class="step"><h3>폐수 특성 계산에서 중단했습니다</h3><pre>COD 분획 결과가 음수이거나 계산 불가능합니다. 위 진단 항목을 먼저 확인하세요.</pre></section>'; return;
+    }
+
+    // Step 2,3
+    const S0 = Sb - Se, Tc = tF + tA + tS + tD + tI, cpt = 24 / Tc, ct = N * cpt, VF = Q / ct, VT = VF / ratio, tau = N * VT * 24 / Q, Hd = ratio * H;
+    // Step 4
+    const bH = bH20 * Math.pow(thH, T - 20), ba = bna * Math.pow(thn, T - 20), bx = bnx * Math.pow(thn, T - 20);
+    const fa = tA / Tc, bn = ba * fa + bx * (1 - fa), mu = mu20 * Math.pow(thm, T - 20);
+    const Qt = Q / N, NO0 = fr * TKN, Mass = VT * MLSS;
+    const terms = (S, NO) => { const d1 = (1 + bH * S) * vf, d2 = (1 + bn * S) * vf; return { A: Qt * Y * S0 * S / d1, D: Qt * nbV * S, C: Qt * Yn * NO * S / d2, B: fd * bH * Qt * Y * S0 * S * S / d1, E: Qt * iT * S, d1, d2 }; };
+    const tot = S => { const t = terms(S, NO0); return t.A + t.B + t.C + t.D + t.E; };
+    
+    let lo = 0.01, hi = 3000; 
+    const massLo = tot(lo), massHi = tot(hi);
+    if(!Number.isFinite(massLo) || !Number.isFinite(massHi) || massLo > Mass || massHi < Mass) {
+        const msg = `<div class="diag-head"><span>계산식 오류 진단</span><span class="diag-count">SRT 계산 불가</span></div><div class="diag-body"><div class="diag-item"><strong>[SRT 반복 계산] 설정된 탐색 범위에서 해를 찾지 못했습니다.</strong><p>목표 고형물 질량 = ${f(Mass,1)} g/조. SRT 0.01 d에서 ${f(massLo,1)} g, SRT 3000 d에서 ${f(massHi,1)} g으로 계산되어 목표 질량을 사이에 두지 못합니다.</p><p><b>조치:</b> SRT 질량수지 항목, MLSS, VSS/TSS 비, COD 분획 및 동역학 계수의 단위와 입력값을 확인하세요.</p></div></div>`;
+        diag.innerHTML = msg;
+        out.innerHTML = '<section class="step"><h3>SRT 계산에서 중단했습니다</h3><pre>계산식의 목표 질량이 반복 계산 범위에 포함되지 않습니다. 오류 진단에 표시된 목표 질량과 양 끝 계산값을 확인하세요.</pre></section>'; return;
+    }
+    for(let i = 0; i < 200; i++) { const m = (lo + hi) / 2; tot(m) < Mass ? lo = m : hi = m; }
+    const S = +((lo + hi) / 2).toFixed(1), tm = terms(S, NO0), sum = tm.A + tm.B + tm.C + tm.D + tm.E;
+    
+    // Step 5
+    const e1 = 1 + bH * S, e2 = 1 + bn * S;
+    const a1 = Qt * Y * S0 * S / (e1 * vf), a2 = Qt * nbV * S, a3 = Qt * Yn * NO0 * S / (e2 * vf), a4 = fd * bH * Qt * Y * S0 * S * S / (e1 * vf), aT = a1 + a2 + a3 + a4, XV = aT / VT, frac = XV / MLSS;
+    // Step 6
+    const pa = Qt * Y * S0 / e1, pc = Qt * Yn * NO0 / e2, pb = fd * bH * Qt * Y * S0 * S / e1, Pxb = pa + pb + pc, NOx = TKN - Ne - 0.12 * Pxb / Qt;
+    // Step 7
+    const n1 = NOx * VF, n2 = Ne * (VT - VF), N0 = (n1 + n2) / VT, Xn = Qt * Yn * NOx * S / (e2 * VT);
+    if(!(Ne>0) || !(N0>0) || !(N0/Ne>0) || !(NOx>0)) {
+        diag.innerHTML = `<div class="diag-head"><span>계산식 오류 진단</span><span class="diag-count">질산화 계산 불가</span></div><div class="diag-body"><div class="diag-item"><strong>[질산화 소요시간] 로그식 입력값이 유효하지 않습니다.</strong><p>N₀ = ${N0} g/m³, Ne = ${Ne} g/m³, NOx = ${NOx} g/m³. ln(N₀/Ne)는 N₀/Ne가 양수여야 계산됩니다.</p><p><b>조치:</b> 목표 유출 NH₄-N(Ne), TKN, 질소 산화량 NOx 및 질소 동화량 산식을 확인하세요.</p></div></div>`;
+        out.innerHTML = '<section class="step"><h3>질산화 계산에서 중단했습니다</h3><pre>로그식의 입력 조건이 성립하지 않아 질산화 소요시간을 계산하지 않았습니다.</pre></section>'; return;
+    }
+    const lhs = KN * Math.log(N0 / Ne) + (N0 - Ne), dof = DO / (Ko + DO), k = Xn * (mu / Yn) * dof, td = lhs / k, th = td * 24, ok = Number.isFinite(th) && th >= 0 && th <= tA;
+    if(!(k>0) || !Number.isFinite(k) || !Number.isFinite(th)) {
+        diag.innerHTML = `<div class="diag-head"><span>계산식 오류 진단</span><span class="diag-count">질산화 계산 불가</span></div><div class="diag-body"><div class="diag-item"><strong>[질산화 소요시간] 반응속도상수 또는 소요시간이 유효하지 않습니다.</strong><p>k = ${k}, t = ${th} h, Xn = ${Xn}, μ = ${mu}, DO 보정 = ${dof}</p><p><b>조치:</b> Yn·μmax·DO·Ko·MLVSS 및 각 단위가 타당한지 확인하세요.</p></div></div>`;
+        out.innerHTML = '<section class="step"><h3>질산화 계산에서 중단했습니다</h3><pre>반응속도식의 계산 결과가 유효하지 않습니다.</pre></section>'; return;
+    }
+    // Step 8-10
+    if(!(tD>0)) {
+        diag.innerHTML = '<div class="diag-head"><span>계산식 오류 진단</span><span class="diag-count">1건 확인</span></div><div class="diag-body"><div class="diag-item"><strong>[배출 유량] 배출시간 tD가 0입니다.</strong><p>Qd = VF/(tD×60)에서 0으로 나누게 됩니다.</p><p><b>조치:</b> 배출시간을 0보다 큰 값으로 입력하세요.</p></div></div>';
+        out.innerHTML = '<section class="step"><h3>배출 유량 계산에서 중단했습니다</h3><pre>배출시간 tD를 확인하세요.</pre></section>'; return;
+    }
+    const Qd = VF / (tD * 60);
+    const Ro = Qt * S0 / 1000 - 1.42 * Pxb / 1000 + 4.57 * Qt * NOx / 1000, Rc = Ro / cpt, Rr = Rc / tA;
+    const P = N * VT * MLSS / S / 1000, BODr = Q * S0 / r / 1000, yT = P / BODr, yV = yT * frac, FM = Q * BOD / (MLSS * N * VT), FMv = Q * BOD / (XV * N * VT);
+    
+    const U = (s, t, cssClass="step") => `<section class="${cssClass}"><h3>${s}</h3><pre>${t}</pre></section>`;
+    let h = '';
+    
+    h += U('풀이 1. 폐수 특성 분석 (Wastewater Characteristics)',
+`유입 bCOD = ${r}(${BOD}) = ${f(Sb)} g/m³
+유입 bsCOD = ${r}(${sBOD}) = ${f(bs)} g/m³
+유입 nbsCOD = sCOD − bsCOD = (${sCOD} − ${f(bs)}) = ${f(nbs)} g/m³
+nbpCOD = COD − bCOD − nbsCOD = (${COD} − ${f(Sb)} − ${f(nbs)}) = ${f(nbp)} g/m³
+VSS_COD 비 = (COD − sCOD)/VSS = (${COD} − ${sCOD})/${VSS} = ${f(vc,2)} g COD/g VSS
+nbVSS = nbpCOD/VSS_COD = ${f(nbp)}/${f(vc,2)} = ${f(nbV)} g/m³
+iTSS (불활성 부유물) = TSS₀ − VSS₀ = (${TSS} − ${VSS}) = ${f(iT)} g/m³`);
+
+    h += U('풀이 2. SBR 운전주기 및 유량 설정 (Operational Cycle)',
+`설정 시간: t_A = ${f(tA,2)}h, t_S = ${f(tS,2)}h, t_D = ${f(tD,2)}h, t_I = ${f(tI,2)}h
+유입 시간: ${autoF ? `t_F = t_A + t_S + t_D = ${f(tF,2)}h (자동 연동)` : `t_F = ${f(tF,2)}h (독립 지정)`}
+총 1주기 (T_c) = t_F + t_A + t_S + t_D + t_I = ${f(Tc,2)} h
+일간 주기 횟수 (1조 당) = 24 / ${f(Tc,2)} = ${f(cpt,2)} 회/일
+시스템 총 주기 수 = (${N}조) × (${f(cpt,2)}) = ${f(ct,2)} 주기/d
+주기당 유입 용적 (V_F) = Q / 총주기수 = ${Q} / ${f(ct,2)} = ${f(VF)} m³/fill`);
+
+    h += U('풀이 3. 반응조 용적 및 수리학적 체류시간 (Reactor Sizing)',
+`배출수위 변동폭 = ${ratio} × (${H} m) = ${f(Hd,2)} m
+조당 필요 용적 (V_T) = V_F / 유입부피비 = ${f(VF)} / ${ratio} = ${f(VT,0)} m³
+총 수리학적 체류시간 (HRT, τ) = (${N}조 × ${f(VT,0)}m³ × 24h) / ${Q} = ${f(tau,0)} h
+
+[침전 슬러지 SVI 검토]
+침전 슬러지 깊이 = H × MLSS × SVI / 10⁶ = ${H} × ${MLSS} × ${SVI} / 10⁶ = ${f(H*MLSS*SVI/1e6,2)} m
+배출 후 잔여 수위 = H − 배출깊이 = ${H} − ${f(Hd,2)} = ${f(H-Hd,2)} m
+평가결과: ${H*MLSS*SVI/1e6 < H-Hd ? '슬러지 층이 배출 수위 하단에 위치하여 안전함 (만족)' : '슬러지 층이 배출 수위를 초과함 (불만족)'}`);
+
+    h += U('풀이 4. 고형물 체류시간 산정 (SRT Iteration)',
+`질량 수지 방정식 적용: 
+(P_X,TSS)SRT = [QY(S₀−S)SRT / (1+b_H·SRT)f_v] + [Q(nbVSS)SRT] + [QY_n(NOx)SRT / (1+b_n·SRT)f_v]
+               + [f_d·b_H·QY(S₀−S)SRT² / (1+b_H·SRT)f_v] + [Q(TSS₀−VSS₀)SRT]
+총 질량(Mass) = V_T × MLSS = ${f(VT,0)} × ${MLSS} = ${f(Mass,0)} g
+
+수렴 계산 결과 (Goal Seek):
+반복 계산을 통한 최적 SRT 도출 = ${f(S,1)} d (허용오차 내 수렴 ✔)`);
+
+    h += U('풀이 5. 유효 미생물 농도 산정 (MLVSS)',
+`생물학적 활성 물질 질량 = ${f(a1,0)}g + ${f(a2,0)}g + ${f(a3,0)}g + ${f(a4,0)}g = 총 ${f(aT,0)} g
+X_MLVSS = 총 질량 / V_T = ${f(XV,0)} g/m³
+MLVSS / MLSS 비율 = ${f(XV,0)} / ${MLSS} = ${f(frac,3)} (약 ${f(frac*100,1)}%)`);
+
+    h += U('풀이 6. 생물학적 질소 산화량 (Nitrification Requirement)',
+`생물학적 슬러지 합성량 (P_X,bio) = ${f(Pxb,0)} g/d = ${f(Pxb/1000)} kg/d
+산화 대상 질소량 (NOx) = TKN − N_e − 0.12(P_X,bio / Q)
+                     = ${TKN} − ${Ne} − 0.12(${f(Pxb/1000)}×10³ / ${f(Qt)}) = ${f(NOx)} g/m³`);
+
+    h += U('풀이 7. 질산화 소요시간 검증 (Aeration Time Verification)',
+`초기 암모니아 농도 (N₀) = [${f(n1,0)} + ${f(n2,0)}] / ${f(VT,0)} = ${f(N0,2)} g/m³
+반응 속도 상수 (k) 산정 및 시간 변환 (t) = ${f(td,4)} d = ${f(th,2)} h`)+
+`<div class="v ${ok ? 'ok' : 'bad'}">
+    산출된 소요 포기시간 ${f(th,2)} h ${ok ? '≤' : '>'} 설정된 포기시간 ${f(tA,2)} h → ${ok ? '조건 만족' : '조건 불만족'}
+</div>`;
+
+    h += U('풀이 8. 상등수 배출 유량 (Decant Flow Rate)',
+`1주기 배출 용적 (V_F) = ${f(VF)} m³
+배출 소요 시간 = ${f(tD*60,0)} 분 (min)
+최종 배출 유량 = ${f(VF)} / ${f(tD*60,0)} = ${f(Qd,2)} m³/min`);
+
+    h += U('풀이 9. 산소 요구량 산정 (Oxygen Demand)',
+`실제 산소요구량 (R_o) = ${f(Qt*S0/1000)} − ${f(1.42*Pxb/1000)} + ${f(4.57*Qt*NOx/1000)} = ${f(Ro)} kg O₂/d·조
+주기당 요구량 = ${f(Rc)} kg O₂/주기
+평균 산소전달률 = ${f(Rr,1)} kg O₂/h 
+(※ 송풍기 용량은 안전율 2.0~3.0 배 적용 권장)`);
+
+    h += U('풀이 10. 잉여 슬러지 발생량 및 부하율 (Sludge Yield & F/M Ratio)',
+`일일 슬러지 생산량 (P_X,TSS) = ${f(P,0)} kg/d
+외견상 수율 (Apparent Yield) = ${f(yV,3)} kg VSS/kg BOD (또는 ${f(yT,3)} kg TSS/kg BOD)
+F/M 비 (MLSS 기준) = ${f(FM,3)} kg BOD / kg MLSS·d
+F/M 비 (MLVSS 기준) = ${f(FMv,3)} kg BOD / kg MLVSS·d`);
+
+    // 최종 요약 영역 생성 (PDF 페이지 브레이크 보호용 클래스 포함)
+    const R = [
+        ['설계 유량 / 반응조 수', 'm³/d / 개', `${f(Q,0)} / ${N}`],
+        ['운전 주기 (T_c)', 'h', f(Tc,2)],
+        ['주기별 시간 (tF / tA / tS / tD / tI)', 'h', `${f(tF,2)} / ${f(tA,2)} / ${f(tS,2)} / ${f(tD,2)} / ${f(tI,2)}`],
+        ['단일 반응조 용적 (V_T)', 'm³', f(VT,0)],
+        ['주기당 유입 부피 (V_F)', 'm³', f(VF,0)],
+        ['배출 장치 구동 깊이 (수위 저하폭)', 'm', f(Hd,2)],
+        ['총 HRT / 총 SRT', 'h / d', `${f(tau,0)} / ${f(S,1)}`],
+        ['유지 MLSS / MLVSS 농도', 'g/m³', `${f(MLSS,0)} / ${f(XV,0)}`],
+        ['필요 산소전달률 (평균)', 'kg O₂/h', f(Rr,1)],
+        ['잉여 슬러지 발생량 (TSS 기준)', 'kg/d', f(P,0)],
+        ['F/M 비 (MLVSS 기준)', 'kg BOD/kg MLVSS·d', f(FMv,3)]
+    ];
+    
+    // 섹션 3. 최종 요약표 추가
+    let summaryHtml = `
+    <div class="section-title step-final" style="margin-top: 30px; border-left: none; padding: 8px 12px; background: var(--bd);">
+        3. 최종 설계 제원 요약 (Summary Table)
+    </div>
+    <div class="tw step-final" style="margin-top: 10px; border-left: none;">
+        <table>
+            <tr><th>주요 설계 인자</th><th>단위</th><th>결과값</th></tr>
+            ${R.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td></tr>`).join('')}
+        </table>
+    </div>`;
+    
+    out.innerHTML = h + summaryHtml;
+    window.SBR_RESULTS = { Rr, Ro, Qd, VT, VF, SRT: S, MLVSS: XV };
+    const warnings = [];
+    if(!ok) warnings.push({step:'질산화 소요시간',title:'설정 포기시간 내에 질산화가 완료되지 않는 것으로 계산됩니다.',reason:`필요시간 ${f(th,2)} h > 설정 포기시간 ${f(tA,2)} h` ,fix:'수온·DO·목표 NH₄-N·동역학 계수 및 운전주기를 확인하세요.'});
+    if(Ro<0) warnings.push({step:'산소 요구량',title:'순 산소 요구량이 음수입니다.',reason:`Ro = ${f(Ro,3)} kg O₂/d·조`,fix:'S₀·Pxb·NOx의 단위와 산소 요구량 식의 질량수지 항을 확인하세요.'});
+    if(!(XV>0)||!Number.isFinite(XV)) warnings.push({step:'MLVSS',title:'MLVSS가 0 이하이거나 계산 불가능합니다.',reason:`MLVSS = ${XV}`,fix:'SRT 질량수지와 고형물 분획을 확인하세요.'});
+    if(!(frac>0&&frac<=1)) warnings.push({step:'MLVSS',title:'MLVSS/MLSS 비율이 0~1 범위를 벗어났습니다.',reason:`MLVSS/MLSS = ${f(frac,4)}`,fix:'MLVSS 산정식과 vf(VSS/TSS 비) 값을 확인하세요.'});
+    const softWarnings = issues.filter(x=>x.kind==='warn').map(x=>({step:x.step,title:x.title,reason:x.reason,fix:x.fix}));
+    const allWarnings = [...softWarnings,...warnings];
+    diag.innerHTML = allWarnings.length
+      ? `<div class="diag-head"><span>계산식 진단 결과</span><span class="diag-count">${allWarnings.length}건 확인</span></div><div class="diag-body">${allWarnings.map(x=>`<div class="diag-item warn"><strong>[${x.step}] ${x.title}</strong><p>${x.reason}</p><p><b>확인 방법:</b> ${x.fix}</p></div>`).join('')}</div>`
+      : '<div class="diag-head"><span>계산식 진단 결과</span><span class="diag-count good">자동 오류 없음</span></div><div class="diag-body"><div class="diag-ok">입력 범위와 주요 계산 조건에서 자동 감지된 오류가 없습니다. 계산 결과는 아래 단계별 산식과 함께 확인하세요.</div></div>';
+
+}
+// 엑셀처럼 시트 전환
+const sheetTabs = document.querySelectorAll('.sheet-tab');
+sheetTabs.forEach(btn => btn.addEventListener('click', () => {
+  sheetTabs.forEach(b => { const active = b === btn; b.classList.toggle('active', active); b.setAttribute('aria-selected', active ? 'true' : 'false'); });
+  document.querySelectorAll('.sheet-panel').forEach(p => p.hidden = p.id !== btn.dataset.sheet);
+  if(btn.dataset.sheet === 'sheet-air') calcAir();
+}));
+
+function calcAir(){
+  const get = id => Number(document.getElementById(id).value);
+  const aor=get('airAor'), activeReactors=get('airActiveReactors'), sf=get('airSF'), ote=get('airOTE')/100, o2=get('airO2');
+  const vm=get('airMainV'), vb=get('airBranchV'), n=get('airBranches');
+  const depth=get('airDepth'), dl=get('airDiffLoss'), pl=get('airPipeLoss'), pm=get('airPressMargin');
+  const valid=[aor,activeReactors,sf,ote,o2,vm,vb,n,depth,dl,pl,pm].every(Number.isFinite) && aor>=0 && Number.isInteger(activeReactors) && activeReactors>=1 && sf>=1 && ote>0 && ote<=1 && o2>0 && vm>0 && vb>0 && Number.isInteger(n) && n>=1 && depth>=0 && dl>=0 && pl>=0 && pm>=0;
+  const host=document.getElementById('airResults'); const formula=document.getElementById('airFormula');
+  if(!valid){host.innerHTML='<section class="air-card"><h2>입력값 확인</h2><p>음수 또는 0이 허용되지 않는 항목이 있거나 입력값이 유효하지 않습니다. OTE는 1~100% 범위로 입력하세요.</p></section>';formula.textContent='입력 오류로 계산하지 않았습니다. 각 입력 항목의 단위와 허용 범위를 확인하세요.';return;}
+  const qh = aor*sf/(o2*ote); // Nm3/h
+  const qm = qh/60;
+  const qBranch=qh/n;
+  const dMain=Math.sqrt(4*(qh/3600)/(Math.PI*vm))*1000;
+  const dBranch=Math.sqrt(4*(qBranch/3600)/(Math.PI*vb))*1000;
+  const pressure=9.80665*depth+dl+pl+pm;
+  const kgcm=pressure/98.0665;
+  const cards=[
+    ['필요 송풍량',qh.toLocaleString('ko-KR',{maximumFractionDigits:2})+' Nm³/h','기준상태 체적유량'],
+    ['분당 송풍량',qm.toLocaleString('ko-KR',{maximumFractionDigits:3})+' Nm³/min','송풍기 용량 비교용'],
+    ['주배관 이론 내경',dMain.toLocaleString('ko-KR',{maximumFractionDigits:1})+' mm','주배관 유속 기준'],
+    ['분기관 1개당 유량',(qBranch).toLocaleString('ko-KR',{maximumFractionDigits:2})+' Nm³/h','균등 분배 가정'],
+    ['분기관 이론 내경',dBranch.toLocaleString('ko-KR',{maximumFractionDigits:1})+' mm','분기관 유속 기준'],
+    ['예비 토출압력',pressure.toLocaleString('ko-KR',{maximumFractionDigits:1})+' kPa','약 '+kgcm.toLocaleString('ko-KR',{maximumFractionDigits:3})+' kgf/cm²']
+  ];
+  host.innerHTML=cards.map(c=>`<section class="air-card"><h2>${c[0]}</h2><div class="air-result">${c[1]}</div><small>${c[2]}</small></section>`).join('');
+  formula.textContent=`[송풍량]
+Qair = AOR × 설계 여유율 ÷ (산소 질량 × 현장 OTE)
+= ${aor.toFixed(3)} × ${sf.toFixed(2)} ÷ (${o2.toFixed(3)} × ${ote.toFixed(3)}) = ${qh.toFixed(3)} Nm³/h
+
+[주배관 이론 내경]
+D = √[4 × (Qair/3600) ÷ (π × v)] × 1000
+= √[4 × (${qh.toFixed(3)}/3600) ÷ (π × ${vm.toFixed(2)})] × 1000 = ${dMain.toFixed(1)} mm
+
+[분기관 이론 내경]
+분기관 유량 = ${qh.toFixed(3)} ÷ ${n} = ${qBranch.toFixed(3)} Nm³/h (균등 분배 가정)
+Dbranch = √[4 × (Qbranch/3600) ÷ (π × vbranch)] × 1000 = ${dBranch.toFixed(1)} mm
+
+[예비 토출압력]
+P = 9.80665 × 수심 + 디퓨저 손실 + 배관·밸브 손실 + 여유
+= 9.80665 × ${depth.toFixed(2)} + ${dl.toFixed(2)} + ${pl.toFixed(2)} + ${pm.toFixed(2)} = ${pressure.toFixed(2)} kPa
+= ${kgcm.toFixed(3)} kgf/cm²
+
+주의: 배관 압력손실은 입력한 추정치이므로 실제 배관 길이·관경·유량·엘보·티·밸브·필터 손실로 재계산해야 합니다. 송풍기 최종 선정에는 제조사 성능곡선과 흡입 조건 및 고도·온도 보정이 필요합니다.`;
+}
+document.querySelectorAll('#sheet-air input').forEach(el=>el.addEventListener('input',calcAir));
+document.getElementById('airCalcBtn').addEventListener('click',calcAir);
+document.getElementById('airLink').addEventListener('click',()=>{
+  if(window.SBR_RESULTS && Number.isFinite(window.SBR_RESULTS.Rr)) {
+    document.getElementById('airAor').value=(window.SBR_RESULTS.Rr * Number(document.getElementById('airActiveReactors').value)).toFixed(3);
+  } else {
+    alert('먼저 시트 1에서 입력값과 계산 결과를 확인하세요.');
+  }
+  calcAir();
+});
+// 인쇄 시 두 시트를 모두 표시하되 화면에서는 탭으로 전환합니다.
+window.addEventListener('beforeprint',()=>document.querySelectorAll('.sheet-panel').forEach(p=>p.dataset.wasHidden=p.hidden?'1':'0'));
+window.addEventListener('afterprint',()=>document.querySelectorAll('.sheet-panel').forEach(p=>p.hidden=p.dataset.wasHidden==='1'));
+
+calc();
+calcAir();
+</script>
+</body>
+</html>
